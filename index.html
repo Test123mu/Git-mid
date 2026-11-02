@@ -194,6 +194,37 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .res.mv p{max-width:36ch}
 .toast{position:fixed;left:50%;bottom:max(20px,env(safe-area-inset-bottom));transform:translate(-50%,30px);opacity:0;z-index:60;background:var(--ink);color:var(--bg);padding:12px 18px;border-radius:999px;font-weight:700;font-size:.9rem;transition:.25s;pointer-events:none;max-width:calc(100vw - 32px);text-align:center}
 .toast.on{opacity:1;transform:translate(-50%,0)}
+.st{display:grid;gap:18px;padding-bottom:40px}
+.st-msg{color:var(--muted);text-align:center;padding:30px 0}
+.st-login{display:grid;gap:12px;justify-items:center;text-align:center;max-width:340px;margin:30px auto}
+.st-login h2{margin:0;font-family:var(--f-display)}
+.st-login input{width:100%;padding:14px 16px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:inherit}
+.st-head{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap}
+.st-head h2{margin:2px 0;font-family:var(--f-display);font-size:1.8rem}
+.st-act{display:flex;gap:8px}
+.st-act .btn{padding:9px 14px}
+.st-tiles{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media(max-width:520px){.st-tiles{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.st-grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));align-items:start}
+.st-card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;min-width:0}
+.st-card h3{margin:0 0 4px;font-family:var(--f-display);font-size:1.05rem}
+.st-note{margin:0 0 10px;font-size:.8rem;color:var(--muted)}
+.st-bars{display:grid;gap:10px}
+.st-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;align-items:baseline}
+.st-k{font-size:.88rem;min-width:0;overflow-wrap:anywhere}
+.st-k small{display:block;color:var(--muted);font-size:.75rem}
+.st-v{font-weight:700;font-size:.9rem}
+.st-row .meter{grid-column:1/-1}
+.st-hours{display:grid;grid-template-columns:repeat(24,1fr);gap:2px;height:120px;align-items:end}
+.st-h{display:grid;grid-template-rows:1fr auto;height:100%;align-items:end;gap:4px}
+.st-h i{display:block;background:var(--accent);border-radius:3px 3px 0 0;min-height:2px}
+.st-h span{font-size:.62rem;color:var(--muted);text-align:center;height:12px}
+.st-hard{margin:0;padding-left:20px;display:grid;gap:12px}
+.st-hq{display:flex;gap:8px;align-items:flex-start;font-size:.9rem}
+.st-hq .tag{flex-shrink:0}
+.st-hm{font-size:.8rem;color:var(--muted);margin-top:4px}
+.st-hm b{color:var(--bad)}
+.st .meter i{background:var(--accent)}
 </style>
 </head>
 <body>
@@ -213,7 +244,7 @@ const S={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.pars
 let prefs=S.get("prefs",{shuffle:true,shuffleOpts:false});
 function applyTheme(t){document.documentElement.setAttribute("data-theme",t)}
 applyTheme(S.get("theme","dark"));
-function toggleTheme(){const t=document.documentElement.getAttribute("data-theme")==="dark"?"light":"dark";S.set("theme",t);applyTheme(t);const b=document.getElementById("theme");if(b)b.textContent=t==="dark"?"☀ Light":"☾ Dark"}
+function toggleTheme(){const t=document.documentElement.getAttribute("data-theme")==="dark"?"light":"dark";S.set("theme",t);applyTheme(t);AN.ev("theme",t);const b=document.getElementById("theme");if(b)b.textContent=t==="dark"?"☀ Light":"☾ Dark"}
 try{if("serviceWorker" in navigator&&location.protocol==="https:"&&!location.hostname.endsWith("claude.ai")&&!location.hostname.endsWith("claudeusercontent.com"))navigator.serviceWorker.register("sw.js").catch(()=>{})}catch(e){}
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const shuf=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
@@ -276,12 +307,12 @@ function home(){
   app.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>{location.hash=b.dataset.go});
   document.getElementById("theme").onclick=toggleTheme;
   const mvb=document.getElementById("move");if(mvb)mvb.onclick=openMove;
-  t1.onclick=()=>{prefs.shuffle=!prefs.shuffle;S.set("prefs",prefs);home()};
-  t2.onclick=()=>{prefs.shuffleOpts=!prefs.shuffleOpts;S.set("prefs",prefs);home()};
+  t1.onclick=()=>{prefs.shuffle=!prefs.shuffle;AN.ev("pref","shuffle",prefs.shuffle?1:0);S.set("prefs",prefs);home()};
+  t2.onclick=()=>{prefs.shuffleOpts=!prefs.shuffleOpts;AN.ev("pref","shuffleOpts",prefs.shuffleOpts?1:0);S.set("prefs",prefs);home()};
   const qi=document.getElementById("q"),sr=document.getElementById("sres");
   qi.oninput=()=>{const t=qi.value.trim().toLowerCase();if(t.length<2){sr.innerHTML="";return}
     const hits=DATA.filter(q=>(q.q+" "+q.o.join(" ")+" "+(q.ex||"")).toLowerCase().includes(t));
-    const sh=SEQS.filter(x=>x.q.toLowerCase().includes(t));
+    const sh=SEQS.filter(x=>x.q.toLowerCase().includes(t));clearTimeout(AN.st);if(t.length>=3)AN.st=setTimeout(()=>AN.ev("search",t.slice(0,40),hits.length,sh.length),1500);
     sr.innerHTML=`<div class="sres"><span class="num">${hits.length} MCQ${hits.length===1?"":"s"} · ${sh.length} SEQ${sh.length===1?"":"s"} match “${esc(qi.value.trim())}”</span>
       ${hits.length?`<button class="btn" id="sgo">Quiz these ${hits.length}</button>`:""}${sh.length?`<button class="btn ghost" id="sgo2">Study the SEQs</button>`:""}
       <ul>${hits.slice(0,6).map(q=>`<li><span class="tag sm">${q.L?"L"+q.L:"?"}</span><span class="clamp">${esc(q.q)}</span></li>`).join("")}</ul></div>`;
@@ -294,7 +325,7 @@ function start(key,set){
   if(!set.qs.length){location.hash="";return}
   let qs=set.exam?set.qs:(prefs.shuffle?shuf(set.qs):set.qs);
   Q={key,name:set.name,exam:!!set.exam,nobest:!!set.nobest,qs:qs.map(q=>{let order=q.o.map((_,i)=>i);if(prefs.shuffleOpts)order=shuf(order);return{q,order}}),i:0,score:0,picked:[]};
-  document.title=set.name+" · GIT Mid MCQ Bank";render();
+  document.title=set.name+" · GIT Mid MCQ Bank";AN.ev("open",key,Q.qs.length);render();
 }
 function flagBtn(q){const f=S.get("flags",[]).includes(q.id);return `<button class="flag" id="flag" aria-pressed="${f}">${f?"★ Flagged":"☆ Flag"}</button>`}
 function render(){
@@ -318,15 +349,15 @@ function render(){
       <div class="opts-row">${!reveal?`<button class="btn ghost" id="skip">Skip</button>`:""}${reveal?`<button class="btn" id="next">${i+1<qs.length?"Next question":"See results"}</button>`:""}</div></div>
   </article>`;
   back.onclick=()=>{location.hash=""};
-  flag.onclick=()=>{const f=new Set(S.get("flags",[]));f.has(q.id)?f.delete(q.id):f.add(q.id);S.set("flags",[...f]);const b=document.getElementById("flag");const on=f.has(q.id);b.setAttribute("aria-pressed",on);b.textContent=on?"★ Flagged":"☆ Flag"};
+  flag.onclick=()=>{const f=new Set(S.get("flags",[]));f.has(q.id)?f.delete(q.id):f.add(q.id);S.set("flags",[...f]);AN.ev("flag",q.id,f.has(q.id)?1:0);const b=document.getElementById("flag");const on=f.has(q.id);b.setAttribute("aria-pressed",on);b.textContent=on?"★ Flagged":"☆ Flag"};
   app.querySelectorAll(".opt:not([disabled])").forEach(b=>b.onclick=()=>pick(+b.dataset.o));
   const n=document.getElementById("next");if(n){n.onclick=next;n.focus({preventScroll:true})}
-  const sk=document.getElementById("skip");if(sk)sk.onclick=()=>{Q.picked[Q.i]=-1;next()};
-  const z=document.getElementById("zoom");if(z)z.onclick=()=>{lbimg.src=q.img;lb.hidden=false};
+  const sk=document.getElementById("skip");if(sk)sk.onclick=()=>{AN.ev("skip",Q.qs[Q.i].q.id,Q.key);Q.picked[Q.i]=-1;next()};
+  const z=document.getElementById("zoom");if(z)z.onclick=()=>{lbimg.src=q.img;lb.hidden=false;AN.ev("zoom",q.id)};
 }
-function pick(o){if(Q.picked[Q.i]!=null)return;Q.picked[Q.i]=o;const q=Q.qs[Q.i].q;const ok=o===q.a;if(ok)Q.score++;track(ok,q);if(Q.exam){next()}else render()}
+function pick(o){if(Q.picked[Q.i]!=null)return;Q.picked[Q.i]=o;const q=Q.qs[Q.i].q;const ok=o===q.a;AN.ev("ans",q.id,o,ok?1:0,Q.key);if(ok)Q.score++;track(ok,q);if(Q.exam){next()}else render()}
 function next(){Q.i++;render();window.scrollTo(0,0)}
-function results(){
+function results(){if(!Q.done){Q.done=1;AN.ev("done",Q.key,Q.score,Q.qs.length)}
   const n=Q.qs.length,p=Math.round(Q.score/n*100);
   if(!Q.nobest){const b=S.get("best",{});if(b[Q.key]==null||Q.score>b[Q.key]){b[Q.key]=Q.score;S.set("best",b)}}
   const missed=Q.qs.filter((it,i)=>Q.picked[i]!==it.q.a);
@@ -349,7 +380,7 @@ function cardSet(key){
   if(key==="seq-all")return{name:"All SEQ flashcards",cs:SEQS};
   const m=key.match(/^seq-l(\d+)$/);if(m){const L=+m[1];return{name:"SEQ · "+lname(L),cs:SEQS.filter(x=>x.L===L)}}
   return null}
-function startCards(name,cs){if(!cs.length){location.hash="";return}Q=null;C={name,cs:prefs.shuffle?shuf(cs):cs,i:0,show:false};renderCard()}
+function startCards(name,cs){if(!cs.length){location.hash="";return}AN.ev("open","seq:"+String(name).slice(0,40),cs.length);Q=null;C={name,cs:prefs.shuffle?shuf(cs):cs,i:0,show:false};renderCard()}
 function renderCard(){
   const c=C.cs[C.i];document.title=C.name+" · GIT Mid MCQ Bank";
   app.innerHTML=`<div class="bar"><div class="bar-top"><button class="back" id="back">← Home</button><span class="bar-title">${esc(C.name)}</span><span class="count num">${C.i+1} / ${C.cs.length}</span></div>
@@ -361,8 +392,8 @@ function renderCard(){
     <div class="actions"><button class="btn ghost" id="prev" ${C.i?"":"disabled"}>← Previous</button><button class="btn" id="nx">${C.i+1<C.cs.length?"Next card":"Finish"}</button></div>
   </article>`;
   back.onclick=()=>{location.hash=""};
-  const r=document.getElementById("rev");if(r)r.onclick=()=>{C.show=true;renderCard()};
-  const z=document.getElementById("zoom");if(z)z.onclick=()=>{lbimg.src=c.img;lb.hidden=false};
+  const r=document.getElementById("rev");if(r)r.onclick=()=>{C.show=true;AN.ev("seq",c.L,c.page);renderCard()};
+  const z=document.getElementById("zoom");if(z)z.onclick=()=>{lbimg.src=c.img;lb.hidden=false;AN.ev("zoom","seq"+c.page)};
   prev.onclick=()=>{if(C.i){C.i--;C.show=false;renderCard()}};
   nx.onclick=()=>{if(C.i+1<C.cs.length){C.i++;C.show=false;renderCard();window.scrollTo(0,0)}else location.hash=""};
 }
@@ -1655,7 +1686,7 @@ function qrSvg(text){let q;for(const ecl of [0,1]){try{q=new QRLIB(-1,ecl);q.add
 function toast(msg){let t=document.getElementById("toast");if(!t){t=document.createElement("div");t.id="toast";t.className="toast";t.setAttribute("role","status");document.body.appendChild(t)}
   t.textContent=msg;t.classList.add("on");clearTimeout(toast._t);toast._t=setTimeout(()=>t.classList.remove("on"),2600)}
 function closeSheet(){const s=document.getElementById("sheet");if(s)s.remove()}
-async function openMove(){
+async function openMove(){AN.ev("move","send");
   const url=location.origin+location.pathname+"#move="+await pack(snapshot());
   closeSheet();const s=document.createElement("div");s.id="sheet";s.className="sheet";
   s.innerHTML=`<div class="sheet-card" role="dialog" aria-modal="true" aria-labelledby="mvh">
@@ -1688,7 +1719,7 @@ async function receiveMove(code){
     <div class="mvcmp"><div><b>From your ${esc(from)}</b>${line(inc)}</div>${cur.n||cur.w||cur.f?`<div class="was"><b>Now on this ${DEV.me}</b>${line(cur)}<em>This will be replaced</em></div>`:""}</div>
     <div class="opts-row center"><button class="btn" id="mvyes">Bring it over</button><button class="btn ghost" id="mvno">Not now</button></div></section>`;
   window.scrollTo(0,0);
-  document.getElementById("mvyes").onclick=()=>{
+  document.getElementById("mvyes").onclick=()=>{AN.ev("move","recv");
     S.set("stats",{n:o.n||0,c:o.c||0,days:(o.d||[]).map(x=>new Date((x+D0)*864e5).toISOString().slice(0,10))});
     S.set("wrong",unbits(o.w));S.set("flags",unbits(o.f));S.set("best",o.b||{});
     if(o.p&&typeof o.p==="object"){prefs=Object.assign(prefs,o.p);S.set("prefs",prefs)}
@@ -1697,7 +1728,135 @@ async function receiveMove(code){
   document.getElementById("mvno").onclick=()=>{history.replaceState(null,"",location.pathname);home()};
 }
 
-function route(){const k=location.hash.slice(1);C=null;
+
+/* ---------- Anonymous usage stats ---------- */
+const AN=(()=>{const EP="https://script.google.com/macros/s/AKfycbxPoU_aTe2Z2FNW-pxKlcCH-4qQpdsjL3z5Gwa5JwMZod0O2sMQG8dvUfv6_vd1AGq5/exec";
+  const on=/^https:\/\/script\.google\.com\/macros\/s\/[\w-]+\/exec$/.test(EP)||/^http:\/\/localhost:\d+\/exec$/.test(EP);
+  const live=on&&!/claude\.ai|claudeusercontent/.test(location.host)&&!S.get("akey","");
+  const rid=n=>{const a=new Uint8Array(n);crypto.getRandomValues(a);return Array.from(a,x=>"abcdefghijklmnopqrstuvwxyz0123456789"[x%36]).join("")};
+  let id=S.get("aid",null),fresh=false;if(typeof id!=="string"||!/^[a-z0-9]{12}$/.test(id)){id=rid(12);S.set("aid",id);fresh=true}
+  const sid=rid(10);let q=S.get("aq",[]);if(!Array.isArray(q))q=[];let busy=false;
+  function ev(t,a="",b="",c="",d=""){if(!live)return;q.push([t,a,b,c,d,Date.now()]);if(q.length>500)q=q.slice(-500);S.set("aq",q);if(q.length>=30)flush()}
+  function flush(beacon){if(!live||busy||!q.length||navigator.onLine===false)return;
+    const batch=q.slice(0,80),blob=new Blob([JSON.stringify({id,s:sid,t:DEV.me,e:batch})],{type:"text/plain"});
+    q=q.slice(batch.length);S.set("aq",q);
+    if(beacon&&navigator.sendBeacon){try{if(navigator.sendBeacon(EP,blob))return}catch(e){}}
+    busy=true;fetch(EP,{method:"POST",mode:"no-cors",body:blob,keepalive:blob.size<60000}).then(()=>{busy=false;if(q.length)flush()})
+      .catch(()=>{busy=false;q=batch.concat(q).slice(-500);S.set("aq",q)})}
+  let vis=document.visibilityState==="visible"?Date.now():0;
+  function hide(){if(vis){const s=Math.round((Date.now()-vis)/1000);vis=0;if(s>2)ev("time",Math.min(s,7200))}
+    if(Q&&!Q.done&&!Q.quitSent&&Q.i>0&&Q.i<Q.qs.length){Q.quitSent=1;ev("quit",Q.key,Q.i,Q.qs.length)}flush(true)}
+  if(live){
+    const ref=(()=>{try{return document.referrer?new URL(document.referrer).host:""}catch(e){return""}})();
+    const app=(window.matchMedia&&matchMedia("(display-mode: standalone)").matches)||navigator.standalone?"app":"browser";
+    ev("visit",app,fresh?1:0,ref.slice(0,40),(navigator.language||"").slice(0,10));
+    document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="hidden")hide();else vis=Date.now()});
+    addEventListener("pagehide",hide);addEventListener("online",()=>flush());
+    setInterval(()=>flush(),15000);setTimeout(()=>flush(),3000)}
+  return{ev,flush,EP,on}})();
+
+/* ---------- Private stats page (#stats, password protected) ---------- */
+async function statsPage(){
+  Q=null;C=null;document.title="Stats · GIT Mid MCQ Bank";
+  const shell=inner=>{app.innerHTML=`<div class="bar"><div class="bar-top"><button class="back" id="back">← Home</button><span class="bar-title">Private stats</span></div></div><section class="st">${inner}</section>`;
+    document.getElementById("back").onclick=()=>{location.hash=""};window.scrollTo(0,0)};
+  if(!AN.on){shell(`<p class="st-msg">Stats aren't connected on this copy of the quiz.</p>`);return}
+  const key=S.get("akey","");
+  if(!key){shell(`<form class="st-login" id="stf"><span class="eyebrow">Private</span><h2>Enter your stats password</h2>
+      <input id="stk" type="password" autocomplete="current-password" placeholder="Password" required><button class="btn wide">Open stats</button>
+      <p class="st-msg" id="sterr" hidden>Wrong password.</p></form>`);
+    document.getElementById("stf").onsubmit=e=>{e.preventDefault();S.set("akey",document.getElementById("stk").value.trim());statsPage()};
+    if(statsPage.bad){document.getElementById("sterr").hidden=false;statsPage.bad=false}return}
+  shell(`<p class="st-msg">Loading stats…</p>`);
+  let res;try{const r=await fetch(AN.EP+"?key="+encodeURIComponent(key),{cache:"no-store"});res=await r.json()}catch(e){shell(`<p class="st-msg">Couldn't load the stats. Check your internet and try again.</p><button class="btn" id="stre">Try again</button>`);document.getElementById("stre").onclick=statsPage;return}
+  if(!res||!res.ok){S.set("akey","");statsPage.bad=true;return statsPage()}
+  renderStats(res.rows||[]);
+}
+function renderStats(rows){
+  const R=rows.map(r=>({t:+r[0],d:String(r[1]),s:String(r[2]),dev:String(r[3]),e:String(r[4]),a:r[5],b:r[6],c:r[7],x:r[8]})).filter(r=>isFinite(r.t)&&r.t>1.7e12&&/^[a-z0-9]{12}$/.test(r.d));
+  const by=t=>R.filter(r=>r.e===t),cnt=arr=>{const m=new Map();arr.forEach(k=>m.set(k,(m.get(k)||0)+1));return[...m].sort((a,b)=>b[1]-a[1])};
+  const pct=(a,b)=>b?Math.round(a/b*100):0,fmt=n=>Number(n).toLocaleString("en-US");
+  const tz={timeZone:"Asia/Riyadh"},dayKey=t=>new Date(t).toLocaleDateString("en-CA",tz),hourOf=t=>+new Date(t).toLocaleString("en-GB",{...tz,hour:"2-digit",hour12:false})%24;
+  const devices=new Set(R.map(r=>r.d)),visits=new Set(R.map(r=>r.s)),ans=by("ans"),right=ans.filter(r=>+r.c===1).length;
+  const time=by("time").map(r=>+r.a||0),perVisit=new Map();by("time").forEach(r=>perVisit.set(r.s,(perVisit.get(r.s)||0)+(+r.a||0)));
+  const avgMin=perVisit.size?Math.round([...perVisit.values()].reduce((a,b)=>a+b,0)/perVisit.size/60):0;
+  const mocks=by("done").filter(r=>r.a==="mock");
+  const label=k=>{k=String(k);if(k==="all")return"Full bank";if(k==="mock")return"Mock exam";if(k==="mistakes")return"My mistakes";if(k==="flagged")return"Flagged";if(k==="search")return"Search results";if(k==="retry")return"Retry missed";
+    if(k.startsWith("s-")){const s=SUBJ.find(x=>"s-"+slug(x)===k);return s||k}const m=k.match(/^l(\d+)$/);if(m)return(+m[1]?"L"+m[1]+" · "+LECT[+m[1]]:"Unknown lecture");
+    if(k.startsWith("seq:"))return"SEQ · "+k.slice(4);return k};
+  const bars=(list,max,fmtv=v=>fmt(v))=>{const top=max||Math.max(1,...list.map(x=>x[1]));return`<div class="st-bars">${list.map(([k,v,sub])=>`<div class="st-row"><span class="st-k">${esc(k)}${sub?`<small>${esc(sub)}</small>`:""}</span><span class="st-v num">${fmtv(v)}</span><div class="meter"><i style="width:${v>0?Math.max(2,Math.round(v/top*100)):0}%"></i></div></div>`).join("")}</div>`};
+  const card=(h,body,note)=>`<div class="st-card"><h3>${h}</h3>${note?`<p class="st-note">${note}</p>`:""}${body}</div>`;
+  const empty=`<p class="st-note">Nothing yet.</p>`;
+  // visits per day (last 14 days) and per hour
+  const first=R.length?Math.min(...R.map(r=>r.t)):Date.now();const days=[];for(let i=13;i>=0;i--){const t=Date.now()-i*864e5;if(t>=first-864e5)days.push(dayKey(t))}
+  const vByDay=new Map();R.forEach(r=>{const k=dayKey(r.t);if(!vByDay.has(k))vByDay.set(k,new Set());vByDay.get(k).add(r.s)});
+  const dayList=days.map(k=>[new Date(k+"T12:00:00").toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short"}),vByDay.has(k)?vByDay.get(k).size:0]);
+  const vByHour=Array(24).fill(0),seenH=new Set();R.forEach(r=>{const k=r.s+"|"+hourOf(r.t);if(!seenH.has(k)){seenH.add(k);vByHour[hourOf(r.t)]++}});
+  const hmax=Math.max(1,...vByHour);
+  const hourChart=`<div class="st-hours">${vByHour.map((v,h)=>`<div class="st-h" title="${h}:00 · ${v} visits"><i style="height:${Math.round(v/hmax*100)}%"></i><span>${h%3===0?h:""}</span></div>`).join("")}</div><p class="st-note">Visits by hour of day (Riyadh time).</p>`;
+  // devices
+  const devType=new Map();R.forEach(r=>devType.set(r.d,r.dev||"?"));
+  const devDays=new Map();R.forEach(r=>{if(!devDays.has(r.d))devDays.set(r.d,new Set());devDays.get(r.d).add(dayKey(r.t))});
+  const returning=[...devDays.values()].filter(s=>s.size>1).length;
+  const appUse=by("visit").filter(r=>r.a==="app").length,visitN=by("visit").length;
+  // lectures accuracy
+  const lec=new Map();ans.forEach(r=>{const q=DATA[+r.a];if(!q)return;const o=lec.get(q.L)||{n:0,c:0};o.n++;if(+r.c===1)o.c++;lec.set(q.L,o)});
+  const lecList=[...lec].filter(([,o])=>o.n>=3).map(([L,o])=>[(L?"L"+L+" · ":"")+(L?LECT[L]:"Unknown lecture"),pct(o.c,o.n),`${o.n} answers`]).sort((a,b)=>a[1]-b[1]);
+  const subj=new Map();ans.forEach(r=>{const q=DATA[+r.a];if(!q)return;const o=subj.get(q.s)||{n:0,c:0};o.n++;if(+r.c===1)o.c++;subj.set(q.s,o)});
+  const subjList=[...subj].map(([s,o])=>[s,pct(o.c,o.n),`${o.n} answers`]).sort((a,b)=>a[1]-b[1]);
+  // hardest questions
+  const qs=new Map();ans.forEach(r=>{const id=+r.a;const o=qs.get(id)||{n:0,w:0,picks:{}};o.n++;if(+r.c!==1){o.w++;o.picks[r.b]=(o.picks[r.b]||0)+1}qs.set(id,o)});
+  const hard=[...qs].filter(([id,o])=>DATA[id]&&o.n>=3).map(([id,o])=>{const q=DATA[id];const wp=Object.entries(o.picks).sort((a,b)=>b[1]-a[1])[0];return{q,n:o.n,w:pct(o.w,o.n),wp:wp?{t:q.o[+wp[0]],p:pct(wp[1],o.n)}:null}}).sort((a,b)=>b.w-a.w||b.n-a.n).slice(0,15);
+  const hardHtml=hard.length?`<ol class="st-hard">${hard.map(h=>`<li><div class="st-hq"><span class="tag sm">${h.q.L?"L"+h.q.L:"?"}</span><span>${esc(h.q.q)}</span></div><div class="st-hm num"><b>${h.w}% wrong</b> · ${h.n} answers · correct: ${esc(h.q.o[h.q.a])}${h.wp?`<br>Most picked wrong: ${esc(h.wp.t)} (${h.wp.p}%)`:""}</div></li>`).join("")}</ol>`:`<p class="st-note">Shows once questions have at least 3 answers.</p>`;
+  // mocks
+  const mb=[[0,9],[10,19],[20,29],[30,34],[35,39],[40,44],[45,50]].map(([a,b])=>[`${a}–${b}`,mocks.filter(r=>+r.b>=a&&+r.b<=b).length]);
+  const mockAvg=mocks.length?Math.round(mocks.reduce((s,r)=>s+(+r.b||0),0)/mocks.length*10)/10:0;
+  // completions per mode
+  const doneM=new Map();by("done").forEach(r=>{const o=doneM.get(r.a)||{n:0,p:0};o.n++;o.p+=pct(+r.b,+r.c);doneM.set(r.a,o)});
+  const doneList=[...doneM].map(([k,o])=>[label(k),o.n,`avg ${Math.round(o.p/o.n)}%`]).sort((a,b)=>b[1]-a[1]).slice(0,15);
+  const quitM=new Map();by("quit").forEach(r=>{const o=quitM.get(r.a)||{n:0,at:0,of:0};o.n++;o.at+=+r.b;o.of+=+r.c;quitM.set(r.a,o)});
+  const quitList=[...quitM].map(([k,o])=>[label(k),o.n,`left at Q${Math.round(o.at/o.n)} of ${Math.round(o.of/o.n)} on average`]).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  const opens=cnt(by("open").map(r=>label(r.a))).slice(0,15);
+  const searches=cnt(by("search").map(r=>String(r.a).toLowerCase())).slice(0,20).map(([k,v])=>[k,v]);
+  const seqL=cnt(by("seq").map(r=>+r.a?"L"+r.a+" · "+LECT[+r.a]:"Unknown lecture")).slice(0,12);
+  const flags=cnt(by("flag").filter(r=>+r.b===1).map(r=>+r.a)).slice(0,8).filter(([id])=>DATA[id]).map(([id,v])=>[DATA[id].q.length>80?DATA[id].q.slice(0,78)+"…":DATA[id].q,v,DATA[id].L?"L"+DATA[id].L:""]);
+  const theme=cnt(by("theme").map(r=>r.a==="light"?"Switched to light":"Switched to dark"));
+  const moves=by("move"),refs=cnt(by("visit").map(r=>r.c||"Direct / QR code")).slice(0,8);
+  const tb=[["0–2 min",0],["2–5 min",0],["5–15 min",0],["15–30 min",0],["30–60 min",0],["60+ min",0]];
+  perVisit.forEach(s=>{const m=s/60;tb[m<2?0:m<5?1:m<15?2:m<30?3:m<60?4:5][1]++});
+  const last=R.length?new Date(Math.max(...R.map(r=>r.t))).toLocaleString("en-GB",{...tz,day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}):"—";
+  app.querySelector(".st").innerHTML=`
+    <div class="st-head"><div><span class="eyebrow">Private · anonymous</span><h2>Quiz stats</h2><p class="st-note">Last activity ${esc(last)} · ${fmt(R.length)} events</p></div>
+      <div class="st-act"><button class="btn ghost" id="strf">Refresh</button><button class="btn ghost" id="stlo">Lock</button></div></div>
+    <section class="stats num st-tiles">
+      <div><b>${fmt(devices.size)}</b><span>devices</span></div><div><b>${fmt(visits.size)}</b><span>visits</span></div>
+      <div><b>${fmt(ans.length)}</b><span>answers</span></div><div><b>${pct(right,ans.length)}%</b><span>batch accuracy</span></div>
+      <div><b>${fmt(mocks.length)}</b><span>mocks finished</span></div><div><b>${avgMin} min</b><span>avg per visit</span></div></section>
+    <div class="st-grid">
+    ${card("Visits per day",bars(dayList),"Up to the last 14 days, Riyadh time.")}
+    ${card("Busiest hours",hourChart)}
+    ${card("Weakest lectures",lecList.length?bars(lecList,100,v=>v+"%"):empty,"Batch accuracy per lecture, lowest first (3+ answers).")}
+    ${card("Subjects",subjList.length?bars(subjList,100,v=>v+"%"):empty,"Batch accuracy per subject.")}
+    ${card("Hardest questions",hardHtml,"Highest % wrong (3+ answers).")}
+    ${card("Mock exam scores",mocks.length?bars(mb):empty,mocks.length?`Average ${mockAvg}/50 from ${mocks.length} finished mocks.`:"")}
+    ${card("Most opened",opens.length?bars(opens):empty)}
+    ${card("Finished quizzes",doneList.length?bars(doneList):empty)}
+    ${card("Left before finishing",quitList.length?bars(quitList):empty)}
+    ${card("Searches",searches.length?bars(searches):empty)}
+    ${card("SEQ answers revealed",seqL.length?bars(seqL):empty)}
+    ${card("Most flagged",flags.length?bars(flags):empty)}
+    ${card("Time per visit",perVisit.size?bars(tb):empty)}
+    ${card("Devices",bars(cnt([...devType.values()])),`${fmt(returning)} of ${fmt(devices.size)} devices came back on another day · ${pct(appUse,visitN)}% of visits from the home-screen app.`)}
+    ${card("Came from",refs.length?bars(refs):empty)}
+    ${card("Other",bars([["Answers skipped",by("skip").length],["Slides zoomed",by("zoom").length],["Progress sent to another device",moves.filter(r=>r.a==="send").length],["Progress received",moves.filter(r=>r.a==="recv").length],...theme]))}
+    </div>
+    <p class="st-note">Everything here is anonymous: each device is a random code, with no names, emails or numbers.</p>`;
+  document.getElementById("strf").onclick=statsPage;
+  document.getElementById("stlo").onclick=()=>{S.set("akey","");location.hash=""};
+}
+
+function route(){const k=location.hash.slice(1);if(Q&&!Q.done&&!Q.quitSent&&Q.i>0&&Q.i<Q.qs.length){Q.quitSent=1;AN.ev("quit",Q.key,Q.i,Q.qs.length)}C=null;
+  if(k==="stats")return statsPage();
   if(k.startsWith("move="))return receiveMove(k.slice(5));
   if(!k)return home();
   if(k.startsWith("seq-")){const s=cardSet(k);if(s)return startCards(s.name,s.cs);return home()}
